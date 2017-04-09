@@ -1,5 +1,7 @@
 
 import sys
+import json
+import argparse
 
 class CallGraph(object):
     def __init__(self):
@@ -30,6 +32,19 @@ class CallGraph(object):
     def linearize(self):
         return self.linearizeNode("", {k: v for k, v in self.funcs.items() if len(v.caller) == 0})
 
+    def createJson(self, file):
+        json.dump(self.linearize(), file, indent = 2)
+
+    def createCsv(self, file, graph = None):
+        if graph is None:
+            return self.createCsv(file, self.linearize())
+
+        if (len(graph["children"])):
+            for child in graph["children"]:
+                self.createCsv(file, child)
+        else:
+            file.write(str(graph["size"]) + ";" + graph["callStack"] + "\n")
+
 class Function(object):
     def __init__(self, name):
         self.name   = name
@@ -46,23 +61,37 @@ class Function(object):
     def addCallee(self, callee):
         self.callee[callee.name] = callee
 
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description = "Extract information about the stack usage and callgraphs of C/C++ programs using the standard GCC toolchain.")
+    parser.add_argument("--stack-usage", default = "stack-usage-log.su",     help = "specifies the file which contains the output of GCCs -fstack-usage option")
+    parser.add_argument("--callgraph",   default = "stack-usage-log.cgraph", help = "specifies the file which contains the output of GCCs -fdump-ipa-cgraph option")
+    parser.add_argument("--csv",         default = None,                     help = "specifies the filename for CSV output")
+    parser.add_argument("--json",        default = None,                     help = "specifies the filename for JSON output")
+
+    args   = parser.parse_args()
     cgraph = CallGraph()
 
-    with open('stack-usage-log.su', 'r') as f:
+    with open(args.stack_usage, "r") as f:
         for line in f:
             cols = line.split('\t')
             text = cols[0].split(':')
 
             cgraph.getFunction(text[3]).setStackSize(int(cols[1]))
 
-    with open('stack-usage-log.cgraph', 'r') as f:
+    with open(args.callgraph, "r") as f:
         for line in f:
-            if line.find('@') != -1 and not line.startswith('  Aux: @'):
-                name = line[0:line.find('/')]
-            if line.startswith('  Calls:') and len(line) > 10:
-                for callee in line[9:].split(' '):
-                    if callee.find('/') != -1:
-                        cgraph.addCall(name, callee[:callee.find('/')])
+            if line.find("@") != -1 and not line.startswith("  Aux: @"):
+                name = line[0:line.find("/")]
+            if line.startswith("  Calls:") and len(line) > 10:
+                for callee in line[9:].split(" "):
+                    if callee.find("/") != -1:
+                        cgraph.addCall(name, callee[:callee.find("/")])
 
-    print(cgraph.linearize())
+    if args.csv is not None:
+        with open(args.csv, "w") as f:
+            cgraph.createCsv(f)
+
+    if args.json is not None:
+        with open(args.json, "w") as f:
+            cgraph.createJson(f)

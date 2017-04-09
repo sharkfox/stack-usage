@@ -2,7 +2,7 @@
 
 ## Summary
 
-The purpose of this python script is to extract information about the **stack usage** and **callgraphs** of your C/C++ program just by using a standard GCC toolchain (native or as cross-compiler).
+The purpose of this python script is to extract information about the **stack usage** and **callgraphs** of your C/C++ program just by using the standard GCC toolchain (native or as cross-compiler).
 
 ## Limitations
 
@@ -23,7 +23,7 @@ Collect the data to process this information.
 
 Run the script to see your stack usage.
 
-    python stack-usage.py
+    python stack-usage.py --csv stack-usage.csv --json stack-usage.json
 
 ## Getting the data (the lazy way)
 
@@ -33,7 +33,15 @@ Just use the makefile provided with this repository by running the make command.
 
 ## Output
 
-The output will we a dictionary in JSON format. It can be used for further post-processing or directly to generate sunburst diagrams (see: [Sunburst Partition](https://bl.ocks.org/mbostock/4063423)). 
+The output will be a CSV file and a dictionary in JSON format. It can be used for further post-processing or directly to generate sunburst diagrams (see: [Sunburst Partition](https://bl.ocks.org/mbostock/4063423)).
+
+stack-usage.csv
+
+    184;foobar/16 foo/160 bar/8
+    24;foobar/16 bar/8
+    184;main/16 foo/160 bar/8
+
+stack-usage.json
 
     {
         'callStack':'',
