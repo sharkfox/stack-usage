@@ -3,6 +3,7 @@ import sys
 import json
 import argparse
 
+
 class CallGraph(object):
     def __init__(self):
         self.funcs = {}
@@ -14,6 +15,9 @@ class CallGraph(object):
 
     def getStackString(self, funcList):
         return " ".join([f.name + "/" + str(f.stack) for f in funcList])
+
+    def getMaxStackSize(self):
+        return max([c["maxSize"] for c in self.linearize()["children"]])
 
     def getStackSize(self, funcList):
         return sum([f.stack for f in funcList])
@@ -44,6 +48,7 @@ class CallGraph(object):
                 self.createCsv(file, child)
         else:
             file.write(str(graph["size"]) + ";" + graph["callStack"] + "\n")
+
 
 class Function(object):
     def __init__(self, name):
@@ -87,6 +92,8 @@ if __name__ == "__main__":
                 for callee in line[9:].split(" "):
                     if callee.find("/") != -1:
                         cgraph.addCall(name, callee[:callee.find("/")])
+
+    print(cgraph.getMaxStackSize())
 
     if args.csv is not None:
         with open(args.csv, "w") as f:
