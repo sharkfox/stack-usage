@@ -8,7 +8,7 @@ int bar()
 int foo()
 {
     int a[32];
-    return bar() + a[0];
+    return foo() + bar() + a[0];
 }
 
 int foobar()

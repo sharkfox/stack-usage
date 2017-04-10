@@ -28,8 +28,12 @@ class CallGraph(object):
 
     def linearizeNode(self, name, funcList, callStack = []):
         node = { "name": name, "children": [], "size": self.getStackSize(callStack), "callStack": self.getStackString(callStack) }
-        for f in funcList:
-            node["children"].append(self.linearizeNode(funcList[f].name, funcList[f].callee, callStack + [funcList[f]]))
+        if len(callStack) != len(set(callStack)):
+            node["name"]      += " (recursion detected)"
+            node["callStack"] += " (recursion detected)"
+        else:
+            for f in funcList:
+                node["children"].append(self.linearizeNode(funcList[f].name, funcList[f].callee, callStack + [funcList[f]]))
         node["maxSize"] = max([c["maxSize"] for c in node["children"]] + [node["size"]])
         return node
 
