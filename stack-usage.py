@@ -7,6 +7,8 @@ import argparse
 class CallGraph(object):
     def __init__(self):
         self.funcs = {}
+        self.maxCallstack = ""
+        self.maxSize = 0
 
     def getFunction(self, name):
         if name not in self.funcs:
@@ -17,7 +19,8 @@ class CallGraph(object):
         return " ".join([f.name + "/" + str(f.stack) for f in funcList])
 
     def getMaxStackSize(self):
-        return max([c["maxSize"] for c in self.linearize()["children"]])
+        self.linearize()
+        return (self.maxSize, self.maxCallstack)
 
     def getStackSize(self, funcList):
         return sum([f.stack for f in funcList])
@@ -35,6 +38,9 @@ class CallGraph(object):
             for f in funcList:
                 node["children"].append(self.linearizeNode(funcList[f].name, funcList[f].callee, callStack + [funcList[f]]))
         node["maxSize"] = max([c["maxSize"] for c in node["children"]] + [node["size"]])
+        if node["maxSize"] >= self.maxSize and len(node["callStack"]) > len(self.maxCallstack):
+            self.maxSize = node["maxSize"]
+            self.maxCallstack = node["callStack"]
         return node
 
     def linearize(self):
